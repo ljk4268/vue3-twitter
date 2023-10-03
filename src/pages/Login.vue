@@ -32,11 +32,12 @@
 </template>
 
 <script>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { auth, db } from '@/firebase'
 import { signInWithEmailAndPassword } from 'firebase/auth'
 import { doc, getDoc } from "firebase/firestore";
 import { useRouter } from 'vue-router'
+import store from '@/store';
 
 export default {
   setup() {
@@ -45,22 +46,29 @@ export default {
     const loading = ref(false)
     const router = useRouter()
 
+    onMounted(() => {
+      console.log(store.state.user);
+    })
+
     const onLogin = async () => {
       if (!email.value || !password.value ) {
         alert('아이디 이메일 입력해주세요.')
       }
       try {
+        // 로그인하기
         loading.value = true
         const { user } = await signInWithEmailAndPassword(
           auth,
           email.value,
           password.value
         )
-        console.log(user);
-        // get user info
-        const USER_COLLECTION = doc(db, "users")
-        // const docSnap = await getDoc(USER_COLLECTION)
-        console.log(USER_COLLECTION);
+
+        // 유저정보 가져오기
+        const USER_COLLECTION = doc(db, "users", email.value)
+        const docSnap = await getDoc(USER_COLLECTION)
+        store.commit('SET_USER', docSnap.data())
+
+        // 메인페이지 이동
         router.replace('/')
       } catch (error) {
         console.log(error);

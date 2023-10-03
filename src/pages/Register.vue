@@ -41,7 +41,7 @@
 import { ref } from 'vue'
 import { auth, db } from '../firebase/index.js'
 import { createUserWithEmailAndPassword } from 'firebase/auth'
-import { collection, addDoc } from 'firebase/firestore'
+import { doc, setDoc } from "firebase/firestore"; 
 import { useRouter } from 'vue-router'
 
 export default {
@@ -64,7 +64,7 @@ export default {
           password.value
         )
         const user = credential.user
-        const docRef = await addDoc(collection(db, 'users'), {
+        const docRef = await setDoc(doc(db, 'users', email.value), {
           uid: user.uid,
           email: email.value,
           profile_image_url: '/profile.jpeg',
