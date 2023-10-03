@@ -39,7 +39,7 @@
 
 <script>
 import { ref } from 'vue'
-import { auth, db } from '../firebase/index.js'
+import { auth, db, USER_COLLECTION } from '../firebase/index.js'
 import { createUserWithEmailAndPassword } from 'firebase/auth'
 import { doc, setDoc } from "firebase/firestore"; 
 import { useRouter } from 'vue-router'
@@ -64,9 +64,11 @@ export default {
           password.value
         )
         const user = credential.user
-        const docRef = await setDoc(doc(db, 'users', email.value), {
+        const userDoc = doc(USER_COLLECTION, user.uid)
+        await setDoc(userDoc, {
           uid: user.uid,
           email: email.value,
+          username: username.value,
           profile_image_url: '/profile.jpeg',
           num_tweets: 0,
           followers: [],
@@ -76,6 +78,7 @@ export default {
         alert('회원가입에 성공하셨습니다. 로그인 해주세요.')
         router.push('/login')
       } catch (err) {
+        console.log(err);
         switch (err.code) {
           case 'auth/invalid-email':
             alert('이메일을 바르게 입력해주세요.')

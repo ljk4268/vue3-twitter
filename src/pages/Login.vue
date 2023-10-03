@@ -46,10 +46,6 @@ export default {
     const loading = ref(false)
     const router = useRouter()
 
-    onMounted(() => {
-      console.log(store.state.user);
-    })
-
     const onLogin = async () => {
       if (!email.value || !password.value ) {
         alert('아이디 이메일 입력해주세요.')
@@ -62,16 +58,14 @@ export default {
           email.value,
           password.value
         )
-
         // 유저정보 가져오기
-        const USER_COLLECTION = doc(db, "users", email.value)
-        const docSnap = await getDoc(USER_COLLECTION)
+        const docRef = doc(db, "users", user.uid)
+        const docSnap = await getDoc(docRef)
         store.commit('SET_USER', docSnap.data())
-
         // 메인페이지 이동
         router.replace('/')
+        
       } catch (error) {
-        console.log(error);
         alert('이메일, 비밀번호를 다시 확인해주세요.')
       } finally {
         loading.value = false
