@@ -82,10 +82,11 @@ export default {
 
     const getUserInfo = async (tweet) => {
       const userDoc = await getDoc(doc(USER_COLLECTION, tweet.uid))
-      const { profile_image_url, email, username } = userDoc.data()
-      tweet.profile_image_url = profile_image_url
-      tweet.email = email
-      tweet.username = username
+      // const { profile_image_url, email, username } = userDoc.data()
+      // tweet.profile_image_url = profile_image_url
+      // tweet.email = email
+      // tweet.username = username
+      tweet = {...tweet, ...userDoc.data()}
       return tweet
     }
 
