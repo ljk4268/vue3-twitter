@@ -28,14 +28,14 @@
             <div class="text-right sm:hidden">
               <button
                 v-if="!tweetBody.length"
-                class="bg-light hover:bg-dark text-sm font-bold text-white px-4 py-1 rounded-full"
+                class="bg-light hover:bg-dark text-sm font-bold text-white px-4 py-1 rounded-full mr-3"
               >
                 트윗
               </button>
               <button
                 v-else
                 @click="onAddTweet"
-                class="bg-primary hover:bg-dark text-sm font-bold text-white px-4 py-1 rounded-full"
+                class="bg-primary hover:bg-dark text-sm font-bold text-white px-4 py-1 rounded-full mr-3"
               >
                 트윗
               </button>
@@ -43,9 +43,10 @@
           </div>
           <div class="flex px-3 py-3">
             <img
-              src="http://picsum.photos/100"
+              :src="currentUser.profile_image_url"
               class="w-10 h-10 rounded-full hover:opacity-80 cursor-pointer"
             />
+
             <div class="ml-2 flex-1 flex flex-col">
               <textarea
                 rows="5"
@@ -78,16 +79,32 @@
 </template>
 
 <script>
-import { ref } from 'vue'
+import { ref, computed } from "vue";
+import addTweet from "../utils/addTweet";
+import store from "@/store";
 
 export default {
-  setup() {
-    const tweetBody = ref('')
+  setup(props, { emit }) {
+    const tweetBody = ref("");
+    const currentUser = computed(() => store.state.user);
+
+    const onAddTweet = async () => {
+      try {
+        await addTweet(tweetBody.value, currentUser.value);
+        tweetBody.value = "";
+        emit("close-modal");
+      } catch (err) {
+        console.log("on add tweet error on homepage: ", err);
+      }
+    };
+
     return {
       tweetBody,
-    }
+      onAddTweet,
+      currentUser,
+    };
   },
-}
+};
 </script>
 
 <style lang="scss" scoped></style>

@@ -47,12 +47,14 @@
 </template>
 
 <script>
-import { computed, onBeforeMount, ref } from 'vue'
-import Trends from '../components/Trends.vue'
-import Tweet from '@/components/Tweet.vue'
-import store from '@/store'
-import { setDoc, doc, onSnapshot, query, getDoc } from 'firebase/firestore'
-import { TWEET_COLLECTION, USER_COLLECTION } from '../firebase'
+import { computed, onBeforeMount, ref } from "vue";
+import Trends from "../components/Trends.vue";
+import Tweet from "@/components/Tweet.vue";
+import store from "@/store";
+import { doc, onSnapshot, query, getDoc, orderBy } from "firebase/firestore";
+import { TWEET_COLLECTION, USER_COLLECTION } from "../firebase";
+import addTweet from "../utils/addTweet";
+import getTweetInfo from "../utils/getTweetInfo";
 
 export default {
   components: {
@@ -60,62 +62,49 @@ export default {
     Tweet,
   },
   setup() {
-    const tweets = ref([])
-    const tweetBody = ref('')
-    const currentUser = computed(() => store.state.user)
+    const tweets = ref([]);
+    const tweetBody = ref("");
+    const currentUser = computed(() => store.state.user);
 
     onBeforeMount(() => {
-      onSnapshot(query(TWEET_COLLECTION), (snapshot) => {
-        snapshot.docChanges().forEach(async (change) => {
-          let tweet = await getUserInfo(change.doc.data())
-          
-          if (change.type === 'added') {
-            tweets.value.splice(change.newIndex, 0, tweet)
-          } else if (change.type === 'modified') {
-            tweets.value.splice(change.oldIndex, 1, tweet)
-          } else if (change.type === 'removed') {
-            tweets.value.splice(change.oldIndex, 1)
-          }
-        })
-      })
-    })
+      onSnapshot(
+        query(TWEET_COLLECTION, orderBy("created_at", "desc")),
+        (snapshot) => {
+          snapshot.docChanges().forEach(async (change) => {
+            let tweet = await getTweetInfo(
+              change.doc.data(),
+              currentUser.value
+            );
 
-    const getUserInfo = async (tweet) => {
-      const userDoc = await getDoc(doc(USER_COLLECTION, tweet.uid))
-      // const { profile_image_url, email, username } = userDoc.data()
-      // tweet.profile_image_url = profile_image_url
-      // tweet.email = email
-      // tweet.username = username
-      tweet = {...tweet, ...userDoc.data()}
-      return tweet
-    }
+            if (change.type === "added") {
+              tweets.value.splice(change.newIndex, 0, tweet);
+            } else if (change.type === "modified") {
+              tweets.value.splice(change.oldIndex, 1, tweet);
+            } else if (change.type === "removed") {
+              tweets.value.splice(change.oldIndex, 1);
+            }
+          });
+        }
+      );
+    });
 
     const onAddTweet = async () => {
       try {
-        const tweetDoc = doc(TWEET_COLLECTION)
-        await setDoc(tweetDoc, {
-          id: tweetDoc.id,
-          tweet_body: tweetBody.value,
-          uid: currentUser.value.uid,
-          created_at: Date.now(),
-          num_commnets: 0,
-          num_retweets: 0,
-          num_likes: 0,
-        })
-        tweetBody.value = ''
+        await addTweet(tweetBody.value, currentUser.value);
+        tweetBody.value = "";
       } catch (err) {
-        console.log('on add tweet error on homepage: ', err)
+        console.log("on add tweet error on homepage: ", err);
       }
-    }
+    };
 
     return {
       tweets,
       currentUser,
       tweetBody,
       onAddTweet,
-    }
+    };
   },
-}
+};
 </script>
 
 <style lang="scss" scoped></style>

@@ -25,8 +25,11 @@ const analytics = getAnalytics(app);
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-export const TWEET_COLLECTION = collection(db, "tweet");
 export const USER_COLLECTION = collection(db, "users");
+export const TWEET_COLLECTION = collection(db, "tweet");
+export const COMMENT_COLLECTION = collection(db, "comments");
+export const RETWEET_COLLECTION = collection(db, "retweets");
+export const LIKE_COLLECTION = collection(db, "likes");
 export const storage = getStorage(app);
 
 
