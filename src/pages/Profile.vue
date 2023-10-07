@@ -10,8 +10,8 @@
           ></i>
         </button>
         <div>
-          <div class="font-extrabold text-lg">jinsyu.com</div>
-          <div class="text-xs text-gray">393 트윗</div>
+          <div class="font-extrabold text-lg">{{ currentUser.email }}</div>
+          <div class="text-xs text-gray">{{ currentUser.num_tweets }}트윗</div>
         </div>
       </div>
       <!-- Profile backgroundimage -->
@@ -21,7 +21,7 @@
           class="w-28 h-28 rounded-full border-4 border-white bg-gray-200 absolute -bottom-14 left-2"
         >
           <img
-            src="http://picsum.photos/200"
+            :src="currentUser.profile_image_url"
             class="rounded-full opacity-90 hover:opacity-100 cursor-pointer"
           />
         </div>
@@ -36,16 +36,16 @@
       </div>
       <!-- user info -->
       <div class="mx-3 mt-2">
-        <div class="font-extrabold text-lg">jinsyu.com</div>
-        <div class="text-gray">@jinsyu</div>
+        <div class="font-extrabold text-lg">{{ currentUser.email }}</div>
+        <div class="text-gray">@{{ currentUser.username }}</div>
         <div>
           <span class="text-gray">가입일:</span>
-          <span class="text-gray">2011년 10월</span>
+          <span class="text-gray">{{ moment(currentUser.created_at).format('YYYY년 MM월') }}</span>
         </div>
         <div>
-          <span class="font-bold mr-1">28</span>
+          <span class="font-bold mr-1">{{ currentUser.followings.length }}</span>
           <span class="text-gray mr-3">팔로우 중</span>
-          <span class="font-bold mr-1">7</span>
+          <span class="font-bold mr-1">{{ currentUser.followers.length }}</span>
           <span class="text-gray">팔로워</span>
         </div>
       </div>
@@ -74,7 +74,12 @@
       </div>
       <!-- tweet -->
       <div class="overflow-y-auto">
-        <Tweet v-for="tweet in 10" :key="tweet" />
+        <Tweet
+          v-for="tweet in tweets"
+          :tweet="tweet"
+          :currentUser="currentUser"
+          :key="tweet.id"
+        />
       </div>
     </div>
     <!-- trend section -->
@@ -82,9 +87,59 @@
   </div>
 </template>
 
-<script setup>
+<script>
 import Trends from '@/components/Trends.vue'
 import Tweet from '@/components/Tweet.vue'
+import store from '@/store'
+import { computed, onBeforeMount, ref } from 'vue'
+import { doc, onSnapshot, query, where, orderBy } from 'firebase/firestore'
+import { TWEET_COLLECTION, USER_COLLECTION } from '../firebase'
+import getTweetInfo from '../utils/getTweetInfo'
+import moment from 'moment'
+
+export default {
+  components: { Trends, Tweet },
+  setup() {
+    // 화살표함수 리턴!! 
+    const currentUser = computed(() => store.state.user)
+    const tweets = ref([])
+
+    onBeforeMount(() => {
+
+      const userDoc = doc(USER_COLLECTION, currentUser.value.uid)
+      onSnapshot(query(userDoc), (doc) => {
+        store.commit('SET_USER', doc.data())
+      })
+
+      onSnapshot(
+        query(
+          TWEET_COLLECTION,
+          where('uid', '==', currentUser.value.uid),
+          orderBy('created_at', 'desc')
+        ),
+        (snapshot) => {
+          snapshot.docChanges().forEach(async (change) => {
+            let tweet = await getTweetInfo(change.doc.data(), currentUser.value)
+
+            if (change.type === 'added') {
+              tweets.value.splice(change.newIndex, 0, tweet)
+            } else if (change.type === 'modified') {
+              tweets.value.splice(change.oldIndex, 1, tweet)
+            } else if (change.type === 'removed') {
+              tweets.value.splice(change.oldIndex, 1)
+            }
+          })
+        }
+      )
+    })
+
+    return {
+      currentUser,
+      tweets,
+      moment
+    }
+  },
+}
 </script>
 
 <style lang="scss" scoped></style>

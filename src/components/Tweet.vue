@@ -17,9 +17,9 @@
         }}</span>
       </div>
       <!-- tweet body -->
-      <div>
+      <router-link :to="`/tweet/${tweet.id}`">
         {{ tweet.tweet_body }}
-      </div>
+      </router-link>
       <!-- tweet actions -->
       <div class="flex justify-between">
         <!-- comment button -->
@@ -52,11 +52,7 @@
           <i class="far fa-heart hover:bg-red-50 rounded-full p-2"></i>
           <span class="ml-1 text-sm">{{ tweet.num_likes }}</span>
         </div>
-        <div
-          v-else
-          class="text-red-400"
-          @click="handleLikes(tweet)"
-        >
+        <div v-else class="text-red-400" @click="handleLikes(tweet)">
           <i class="far fa-heart hover:bg-red-50 rounded-full p-2"></i>
           <span class="ml-1 text-sm">{{ tweet.num_likes }}</span>
         </div>
@@ -75,27 +71,27 @@
 </template>
 
 <script>
-import moment from "moment";
-import { ref } from "vue";
-import CommentModal from "./CommentModal.vue";
-import handleReTweet from "../utils/handleRetweet";
-import handleLikes from "../utils/handleLikes";
+import moment from 'moment'
+import { ref } from 'vue'
+import CommentModal from './CommentModal.vue'
+import handleReTweet from '../utils/handleRetweet'
+import handleLikes from '../utils/handleLikes'
 
 export default {
-  props: ["currentUser", "tweet"],
+  props: ['currentUser', 'tweet'],
   components: {
     CommentModal,
   },
   setup(props) {
-    const showCommentModal = ref(false);
+    const showCommentModal = ref(false)
     return {
       moment,
       showCommentModal,
       handleReTweet,
       handleLikes,
-    };
+    }
   },
-};
+}
 </script>
 
 <style lang="scss" scoped></style>

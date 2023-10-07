@@ -5,11 +5,11 @@ import store from "@/store";
 export default async (tweet, currentUser) => {
   // Adding user info
   const userDoc = await getDoc(doc(USER_COLLECTION, tweet.uid));
-  // const { profile_image_url, email, username } = userDoc.data()
-  // tweet.profile_image_url = profile_image_url
-  // tweet.email = email
-  // tweet.username = username
-  tweet = { ...tweet, ...userDoc.data() };
+  const { profile_image_url, email, username } = userDoc.data()
+  tweet.profile_image_url = profile_image_url
+  tweet.email = email
+  tweet.username = username
+  // tweet = { ...tweet, ...userDoc.data() };
 
   // Adding retweet info
   const q = query(

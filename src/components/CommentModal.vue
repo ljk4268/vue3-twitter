@@ -128,7 +128,7 @@ export default {
           id: commentsDoc.id,
           from_tweet_id: props.tweet.id,
           comment_tweet_body: tweetBody.value,
-          user_id: currentUser.value.uid,
+          uid: currentUser.value.uid,
           created_at: Date.now(),
         });
 
