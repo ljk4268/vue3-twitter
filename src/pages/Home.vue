@@ -51,7 +51,7 @@ import { computed, onBeforeMount, ref } from "vue";
 import Trends from "../components/Trends.vue";
 import Tweet from "@/components/Tweet.vue";
 import store from "@/store";
-import { doc, onSnapshot, query, getDoc, orderBy } from "firebase/firestore";
+import { onSnapshot, query, orderBy } from "firebase/firestore";
 import { TWEET_COLLECTION, USER_COLLECTION } from "../firebase";
 import addTweet from "../utils/addTweet";
 import getTweetInfo from "../utils/getTweetInfo";

@@ -70,6 +70,7 @@ export default {
           email: email.value,
           username: username.value,
           profile_image_url: '/profile.jpeg',
+          background_image_url: '/profile.jpeg',
           num_tweets: 0,
           followers: [],
           followings: [],
