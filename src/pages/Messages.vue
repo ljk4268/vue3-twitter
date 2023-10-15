@@ -6,39 +6,24 @@
         <div class="p-3 h-14 font-bold text-lg border-b border-gray-200">
           쪽지
         </div>
-        <!-- a char list -->
+        <!-- a user list -->
+
         <div
-          class="flex px-3 py-4 hover:bg-gray-50 border-b border-gray-200 bg-gray-200"
+          @click="onSelectedUser(user)"
+          class="flex items-center cursor-pointer px-3 py-4 hover:bg-gray-50 border-b border-gray-200"
+          v-for="user in users"
+          :key="user.id"
         >
           <img
-            src="http://picsum.photos/200"
+            :src="user.profile_image_url"
             class="w-10 h-10 rounded-full cursor-pointer mr-2"
           />
-          <div>
-            <div class="flex space-x-1">
-              <div class="font-bold">jinsyu.com</div>
-              <div class="text-gray-500">@jinsyu</div>
-              <div class="text-gray-500">1월 29일</div>
+          <div class="flex space-x-2">
+            <div class="font-bold">{{ user.email }}</div>
+            <div class="text-gray-500">@{{ user.username }}</div>
+            <div class="text-gray-500">
+              {{ moment(user.created_at).format("M월 DD일") }}
             </div>
-            <div class="text-gray-500">메세지</div>
-          </div>
-        </div>
-        <div
-          class="flex px-3 py-4 hover:bg-gray-50 border-b border-gray-200"
-          v-for="message in 10"
-          :key="message"
-        >
-          <img
-            src="http://picsum.photos/200"
-            class="w-10 h-10 rounded-full cursor-pointer mr-2"
-          />
-          <div>
-            <div class="flex space-x-1">
-              <div class="font-bold">jinsyu.com</div>
-              <div class="text-gray-500">@jinsyu</div>
-              <div class="text-gray-500">1월 29일</div>
-            </div>
-            <div class="text-gray-500">메세지</div>
           </div>
         </div>
       </div>
@@ -53,8 +38,8 @@
             class="w-8 h-8 rounded-full mr-2 cursor-pointer"
           />
           <div>
-            <div class="font-bold text-lg">jinsyu.com</div>
-            <div class="text-sm text-gray-500">@jinsyu</div>
+            <div class="font-bold text-lg">ljk4268@test.com</div>
+            <div class="text-sm text-gray-500">@ljk4268</div>
           </div>
         </div>
         <!-- user info -->
@@ -99,11 +84,12 @@
         <!-- chat input -->
         <div class="flex items-center bg-white border-t border-gray-200 sticky">
           <input
+            v-model="messageBody"
             type="text"
             placeholder="새 쪽지 작성하기"
             class="m-2 py-1 px-4 rounded-full bg-gray-200 resize-none outline-none flex-1"
           />
-          <button class="text-center">
+          <button class="text-center" @click="onSendMessage">
             <i
               class="far fa-paper-plane text-primary text-lg hover:bg-blue-50 p-2 rounded-full w-10 h-10"
             ></i>
@@ -114,6 +100,80 @@
   </div>
 </template>
 
-<script setup></script>
+<script>
+import {
+  query,
+  orderBy,
+  getDocs,
+  doc,
+  setDoc,
+  where,
+} from "firebase/firestore";
+import { MESSAGE_COLLECTION, USER_COLLECTION } from "@/firebase";
+import { computed, onBeforeMount, ref } from "vue";
+import store from "@/store";
+import moment from "moment";
+export default {
+  setup() {
+    const currentUser = computed(() => store.state.user);
+    const users = ref([]);
+    const selectedUser = ref(null);
+    const messageBody = ref("");
+    const messages = ref([]);
+
+    onBeforeMount(async () => {
+      const userDocRef = query(USER_COLLECTION, orderBy("created_at", "desc"));
+      const snapShot = await getDocs(userDocRef);
+      snapShot.forEach((doc) => {
+        const user = doc.data();
+        if (user.email === currentUser.email) return;
+        users.value.push(user);
+      });
+    });
+
+    const onSelectedUser = async (user) => {
+      selectedUser.value = user;
+
+      const messageDocRef = query(
+        MESSAGE_COLLECTION,
+        where("from_uid", "==", currentUser.value.uid),
+        where("to_uid", "==", selectedUser.value.uid),
+        orderBy("created_at", "desc")
+      );
+
+      const snapShot = await getDocs(messageDocRef);
+      console.log(snapShot.docs);
+      messages.value = snapShot.docs.map(doc => doc.data())
+    };
+
+    const onSendMessage = async () => {
+      if (!messageBody.value || !selectedUser.value) return;
+
+      const messageDoc = doc(MESSAGE_COLLECTION);
+      let message = {
+        id: messageDoc.id,
+        from_uid: currentUser.value.uid,
+        to_uid: selectedUser.value.uid,
+        messageBody: messageBody.value,
+        created_at: Date.now(),
+      };
+      await setDoc(messageDoc, message);
+
+      messages.value.push(message);
+      messageBody.value = "";
+    };
+
+    return {
+      currentUser,
+      users,
+      moment,
+      onSelectedUser,
+      onSendMessage,
+      messageBody,
+      messages,
+    };
+  },
+};
+</script>
 
 <style lang="scss" scoped></style>

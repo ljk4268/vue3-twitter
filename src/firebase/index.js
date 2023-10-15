@@ -30,6 +30,7 @@ export const TWEET_COLLECTION = collection(db, "tweet");
 export const COMMENT_COLLECTION = collection(db, "comments");
 export const RETWEET_COLLECTION = collection(db, "retweets");
 export const LIKE_COLLECTION = collection(db, "likes");
+export const MESSAGE_COLLECTION = collection(db, "message");
 export const storage = getStorage(app);
 
 
